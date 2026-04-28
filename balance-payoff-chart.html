@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balance Payoff — Interest vs. Principal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #1a1a1a;
+      --surface:  #242424;
+      --border:   rgba(255,255,255,0.1);
+      --text:     #e8e8e8;
+      --muted:    #888;
+      --teal:     #1D9E75;
+      --red:      #E24B4A;
+      --red-dark: #A32D2D;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      padding: 16px;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 12px;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Scenario buttons ── */
+    .scen-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .scen-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .scen-btn {
+      padding: 5px 14px;
+      font-size: 12.5px;
+      font-family: inherit;
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .scen-btn:focus-visible {
+      outline: 2px solid var(--teal);
+      outline-offset: 2px;
+    }
+
+    .scen-btn[aria-pressed="true"] {
+      border: 2px solid var(--text);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .legend-swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    /* ── Chart canvas ── */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 260px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Summary stat cards ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 8px;
+    }
+
+    .stat {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .stat__label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .stat__value {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .stat__value--red    { color: var(--red-dark); }
+    .stat__value--green  { color: var(--teal); }
+  </style>
+</head>
+<body>
+
+<h2>Balance payoff — interest vs. principal each month</h2>
+
+<div class="scen-row" role="group" aria-label="Payment scenario selection">
+  <span class="scen-label" id="scen-group-label">Scenario:</span>
+  <button class="scen-btn" id="btn-min"  aria-pressed="true"  onclick="pick('min')">Minimum only</button>
+  <button class="scen-btn" id="btn-103"  aria-pressed="false" onclick="pick(103)">$103 / month</button>
+  <button class="scen-btn" id="btn-200"  aria-pressed="false" onclick="pick(200)">$200 / month</button>
+</div>
+
+<div class="legend" role="list">
+  <span role="listitem">
+    <span class="legend-swatch" style="background:var(--teal)" aria-hidden="true"></span>
+    Principal (bottom)
+  </span>
+  <span role="listitem">
+    <span class="legend-swatch" style="background:var(--red)" aria-hidden="true"></span>
+    Interest (top)
+  </span>
+</div>
+
+<div class="chart-wrap">
+  <canvas
+    id="chart"
+    role="img"
+    aria-label="Stacked bar chart showing principal (teal, bottom) and interest (red, top) for each monthly payment in the selected scenario. Use the scenario buttons above to switch between minimum payment, $103 per month, and $200 per month."
+  >Each bar represents one month of payment. Teal shows principal reduction; red shows interest consumed.</canvas>
+</div>
+
+<div class="stats" role="region" aria-label="Payment scenario summary">
+  <div class="stat">
+    <div class="stat__label">Months to pay off</div>
+    <div class="stat__value" id="st-months" aria-live="polite">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat__label">Total paid</div>
+    <div class="stat__value" id="st-total" aria-live="polite">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat__label">Total interest</div>
+    <div class="stat__value stat__value--red" id="st-interest" aria-live="polite">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat__label">Saved vs. minimum</div>
+    <div class="stat__value stat__value--green" id="st-savings" aria-live="polite">—</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+/* ─────────────────────────────────────────────
+   Configuration — change these to match the
+   actual account values on each statement.
+   ───────────────────────────────────────────── */
+const BALANCE   = 3000;   // current balance ($)
+const APR       = 0.21;   // annual percentage rate (decimal)
+const MIN_PCT   = 0.03;   // minimum payment as % of balance
+const MIN_FLOOR = 25;     // minimum payment floor ($)
+
+/* ─────────────────────────────────────────────
+   Simulation engine (Appendix M1 assumptions)
+   ───────────────────────────────────────────── */
+function simulate(balance, apr, payType) {
+  const r = apr / 12;
+  let bal = balance;
+  const months = [];
+
+  while (bal > 0.005 && months.length < 720) {
+    const interest = parseFloat((bal * r).toFixed(2));
+    bal = parseFloat((bal + interest).toFixed(2));
+
+    let pmt = payType === 'min'
+      ? parseFloat(Math.min(bal, Math.max(parseFloat((bal * MIN_PCT).toFixed(2)), MIN_FLOOR)).toFixed(2))
+      : parseFloat(Math.min(bal, payType).toFixed(2));
+
+    const interestPaid   = parseFloat(Math.min(interest, pmt).toFixed(2));
+    const principalPaid  = parseFloat(Math.max(0, pmt - interest).toFixed(2));
+    bal = parseFloat(Math.max(0, bal - pmt).toFixed(2));
+
+    months.push({ interest: interestPaid, principal: principalPaid, pmt });
+  }
+
+  const totalPaid = parseFloat(months.reduce((s, m) => s + m.pmt, 0).toFixed(2));
+  return { months, totalPaid, totalInterest: parseFloat((totalPaid - balance).toFixed(2)), n: months.length };
+}
+
+/* ─────────────────────────────────────────────
+   Pre-compute all three scenarios
+   ───────────────────────────────────────────── */
+const results = {
+  min: simulate(BALANCE, APR, 'min'),
+  103: simulate(BALANCE, APR, 103),
+  200: simulate(BALANCE, APR, 200),
+};
+
+/* ─────────────────────────────────────────────
+   Formatting helpers
+   ───────────────────────────────────────────── */
+function fmtYM(n) {
+  const y = Math.floor(n / 12), m = n % 12;
+  if (!y) return m + ' mo';
+  if (!m) return y + ' yr';
+  return y + ' yr ' + m + ' mo';
+}
+function fmtUSD(n) {
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+
+/* ─────────────────────────────────────────────
+   X-axis tick callback — year increments
+   ───────────────────────────────────────────── */
+function tickLabel(val, idx) {
+  const mo = idx + 1;
+  if (mo === 1)      return 'Mo 1';
+  if (mo % 12 === 0) return 'Yr ' + (mo / 12);
+  return null;
+}
+
+/* ─────────────────────────────────────────────
+   Build chart
+   ───────────────────────────────────────────── */
+const ctx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: results.min.months.map((_, i) => i),
+    datasets: [
+      {
+        label: 'Principal',
+        data: results.min.months.map(m => m.principal),
+        backgroundColor: '#1D9E75',
+        stack: 's',
+        borderWidth: 0,
+      },
+      {
+        label: 'Interest',
+        data: results.min.months.map(m => m.interest),
+        backgroundColor: '#E24B4A',
+        stack: 's',
+        borderWidth: 0,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: items => 'Month ' + (items[0].dataIndex + 1),
+          label: item  => ' ' + item.dataset.label + ': ' + fmtUSD(item.raw),
+        },
+      },
+    },
+    scales: {
+      x: {
+        stacked: true,
+        ticks: {
+          autoSkip: false,
+          maxRotation: 0,
+          font: { size: 11 },
+          color: '#888',
+          callback: tickLabel,
+        },
+        grid: { display: false },
+      },
+      y: {
+        stacked: true,
+        ticks: {
+          font: { size: 11 },
+          color: '#888',
+          callback: v => '$' + v,
+        },
+        grid: { color: 'rgba(255,255,255,0.06)' },
+      },
+    },
+    barPercentage: 0.85,
+    categoryPercentage: 0.75,
+  },
+});
+
+/* ─────────────────────────────────────────────
+   Update chart + stats when scenario changes
+   ───────────────────────────────────────────── */
+function pick(scenario) {
+  /* Update button states */
+  const map = { min: 'btn-min', 103: 'btn-103', 200: 'btn-200' };
+  Object.entries(map).forEach(([key, id]) => {
+    const pressed = (key === String(scenario));
+    document.getElementById(id).setAttribute('aria-pressed', pressed);
+  });
+
+  const res = results[scenario];
+
+  /* Rebuild chart data */
+  chart.data.labels   = res.months.map((_, i) => i);
+  chart.data.datasets[0].data = res.months.map(m => m.principal);
+  chart.data.datasets[1].data = res.months.map(m => m.interest);
+  chart.update('none');
+
+  /* Update stat cards */
+  document.getElementById('st-months').textContent   = fmtYM(res.n);
+  document.getElementById('st-total').textContent    = fmtUSD(res.totalPaid);
+  document.getElementById('st-interest').textContent = fmtUSD(res.totalInterest);
+
+  const saved = scenario === 'min'
+    ? '—'
+    : fmtUSD(results.min.totalInterest - res.totalInterest);
+  document.getElementById('st-savings').textContent = saved;
+}
+
+/* Initialise with minimum scenario */
+pick('min');
+</script>
+
+</body>
+</html>
