@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pay More Than the Minimum — University of Illinois</title>
+  <style>
+    /*
+     * Color palette: University of Illinois System brand
+     * https://www.uillinois.edu/erc/brand_and_marketing/brand/color_palettes
+     *
+     * --navy      #13294B  Primary U of I Blue (PMS 2767) — text, borders, headers
+     * --blue      #0455A4  Secondary accent blue (PMS 2728) — links, highlights
+     * --teal      #0D605E  Accent teal (PMS 7720) — principal / positive
+     * --salmon    #EE5E5E  Accent salmon (PMS 178) — interest / cost
+     * --gray-lt   #E8E9EA  Neutral light (PMS 427) — backgrounds
+     * --gray-mid  #A5A8AA  Neutral mid (Cool Gray 6) — muted text
+     * --gray-dk   #5E6669  Neutral dark (Cool Gray 10) — secondary text
+     * --white     #FFFFFF  Page background
+     *
+     * Salmon replaces the harsh red to stay on-brand while keeping
+     * the semantic red = cost / interest meaning legible and accessible.
+     * Teal replaces the dark green; it is an official U of I accent color.
+     */
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:       #13294B;
+      --blue:       #0455A4;
+      --teal:       #0D605E;
+      --teal-lt:    #e6f2f2;
+      --salmon:     #EE5E5E;
+      --salmon-lt:  #fdf0f0;
+      --salmon-bdr: #f0b8b8;
+      --gray-lt:    #E8E9EA;
+      --gray-mid:   #A5A8AA;
+      --gray-dk:    #5E6669;
+      --white:      #FFFFFF;
+      --border:     #d0d3d6;
+      --text:       #13294B;
+    }
+
+    /*
+     * Wrapper is transparent so it inherits whatever background
+     * the host page uses. Font is set to inherit so it matches
+     * the site's own typeface. Only set font-size as a base.
+     */
+    .uoi-embed {
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ─── Section spacing ─── */
+    .uoi-embed .section { margin-bottom: 20px; }
+
+    /* ─── Two-column statement grid ─── */
+    .stmt-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 620px) {
+      .stmt-wrap { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Shared panel ─── */
+    .panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    /* ─── Section heading rows ─── */
+    .section-head {
+      padding: 4px 10px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--white);
+      background: var(--navy);
+    }
+
+    /* ─── Data rows ─── */
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 10px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    .row:last-child { border-bottom: none; }
+    .row .lbl { color: var(--gray-dk); }
+    .row .val { font-weight: 600; text-align: right; color: var(--navy); }
+    .row--bold .lbl { color: var(--navy); font-weight: 600; }
+    .row--bold .val { font-weight: 700; }
+    .val--teal   { color: var(--teal); }
+    .val--salmon { color: var(--salmon); }
+
+    /* ─── APR badge ─── */
+    .apr-badge {
+      display: inline-block;
+      background: var(--salmon-lt);
+      border: 1px solid var(--salmon-bdr);
+      color: var(--salmon);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+
+    /* ─── Rewards bar ─── */
+    .rewards-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 10px;
+      background: var(--gray-lt);
+      border-bottom: 1px solid var(--border);
+    }
+    .rewards-bar .lbl { font-size: 11px; color: var(--gray-dk); }
+    .rewards-bar .val { font-size: 18px; font-weight: 700; color: var(--navy); }
+
+    /* ─── Footer note ─── */
+    .foot-note {
+      padding: 5px 10px;
+      font-size: 11px;
+      color: var(--gray-mid);
+      background: var(--gray-lt);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ─── Right panel header ─── */
+    .panel-header {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--navy);
+    }
+    .panel-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.4;
+    }
+
+    /* ─── Equation line ─── */
+    .equation {
+      padding: 7px 10px;
+      font-size: 12px;
+      color: var(--gray-dk);
+      background: var(--gray-lt);
+      border-bottom: 1px solid var(--border);
+    }
+    .equation strong { color: var(--salmon); font-weight: 700; }
+
+    /* ─── Split bar ─── */
+    .split-bar {
+      display: flex;
+      height: 36px;
+      margin: 10px 10px 8px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .split-bar__interest {
+      width: 58.33%;
+      background: var(--salmon);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .split-bar__principal {
+      flex: 1;
+      background: var(--teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* ─── Stat boxes (month 1) ─── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 0 10px 8px;
+    }
+    .stat-box {
+      background: var(--gray-lt);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+    }
+    .stat-box .lbl { font-size: 11px; color: var(--gray-dk); margin-bottom: 3px; }
+    .stat-box .big { font-size: 20px; font-weight: 700; line-height: 1.2; }
+    .stat-box .sub { font-size: 11px; color: var(--gray-mid); margin-top: 2px; }
+
+    /* ─── Compounding callout ─── */
+    .compound-box {
+      margin: 0 10px 10px;
+      background: var(--teal-lt);
+      border: 1px solid #b3d4d3;
+      border-left: 4px solid var(--teal);
+      border-radius: 3px;
+      padding: 9px 11px;
+      font-size: 12px;
+      color: var(--gray-dk);
+      line-height: 1.6;
+    }
+    .compound-box strong { color: var(--navy); font-weight: 700; }
+
+    /* ─── Chart section ─── */
+    .chart-panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px;
+    }
+
+    .chart-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
+      letter-spacing: 0.01em;
+    }
+
+    .scen-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .scen-label { color: var(--gray-dk); font-size: 12px; font-weight: 600; }
+
+    .scen-btn {
+      padding: 5px 14px;
+      font-size: 12.5px;
+      font-family: inherit;
+      border-radius: 3px;
+      cursor: pointer;
+      background: var(--white);
+      border: 1px solid var(--border);
+      color: var(--gray-dk);
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .scen-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .scen-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .scen-btn[aria-pressed="true"] {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    /* ─── Legend ─── */
+    .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--gray-dk);
+      margin-bottom: 10px;
+    }
+    .legend-swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 260px;
+      margin-bottom: 14px;
+    }
+
+    /* ─── Chart summary stats ─── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 8px;
+    }
+    .stat {
+      background: var(--gray-lt);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+    }
+    .stat__label { font-size: 11px; color: var(--gray-dk); margin-bottom: 3px; }
+    .stat__value { font-size: 15px; font-weight: 700; color: var(--navy); }
+    .stat__value--salmon { color: var(--salmon); }
+    .stat__value--teal   { color: var(--teal); }
+  </style>
+</head>
+<body>
+
+<div class="uoi-embed">
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 1 — Statement + Month 1 breakdown
+       ═══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="stmt-wrap">
+
+      <!-- LEFT: Credit card statement -->
+      <section class="panel" aria-label="Credit card statement">
+
+        <div class="section-head">Credit card statement</div>
+
+        <div class="row"><span class="lbl">Previous balance</span>   <span class="val">$2,500.00</span></div>
+        <div class="row"><span class="lbl">Payments / credits</span> <span class="val val--teal">−$500.00</span></div>
+        <div class="row"><span class="lbl">New charges</span>        <span class="val">+$1,000.00</span></div>
+        <div class="row"><span class="lbl">Fees charged</span>       <span class="val">$0.00</span></div>
+        <div class="row"><span class="lbl">Interest charged</span>   <span class="val">$0.00</span></div>
+
+        <div class="row row--bold"><span class="lbl">New balance</span>          <span class="val">$3,000.00</span></div>
+        <div class="row">          <span class="lbl">Minimum payment due</span> <span class="val">$90.00</span></div>
+        <div class="row">          <span class="lbl">Payment due date</span>    <span class="val">5/20/26</span></div>
+
+        <div class="section-head">Rates</div>
+
+        <div class="row">
+          <span class="lbl">Purchase APR</span>
+          <span class="val">
+            <span class="apr-badge" aria-label="21 percent, current average U.S. rate">21.00% avg. US rate</span>
+          </span>
+        </div>
+        <div class="row"><span class="lbl">Monthly rate</span>      <span class="val val--salmon">1.75%</span></div>
+        <div class="row"><span class="lbl">Cash advance APR</span>  <span class="val">26.99%</span></div>
+        <div class="row"><span class="lbl">Penalty APR</span>       <span class="val">28.99%</span></div>
+
+        <div class="section-head">Credit</div>
+
+        <div class="row"><span class="lbl">Credit limit</span>       <span class="val">$5,000.00</span></div>
+        <div class="row"><span class="lbl">Available credit</span>   <span class="val">$2,000.00</span></div>
+        <div class="row"><span class="lbl">Cash advance limit</span> <span class="val">$350.00</span></div>
+        <div class="row"><span class="lbl">Available cash</span>     <span class="val">$350.00</span></div>
+
+        <div class="section-head">Rewards <span style="font-weight:400;text-transform:none;letter-spacing:0">as of Apr 2026</span></div>
+
+        <div class="rewards-bar">
+          <span class="lbl">Points balance</span>
+          <span class="val" aria-label="250.50 rewards points">250.50</span>
+        </div>
+
+        <div class="foot-note">Days in billing period: 32</div>
+
+      </section>
+
+      <!-- RIGHT: Month 1 breakdown -->
+      <section class="panel" aria-label="Month one payment breakdown">
+
+        <div class="panel-header">
+          <h2>Month 1 — how your $90 payment breaks&nbsp;down</h2>
+        </div>
+
+        <p class="equation">
+          $3,000 &times; 1.75% (monthly rate) = <strong>$52.50 in interest</strong>
+        </p>
+
+        <div
+          class="split-bar"
+          role="img"
+          aria-label="58 percent of your $90 minimum payment goes to interest, only 42 percent reduces your debt"
+        >
+          <div class="split-bar__interest">$52.50 interest</div>
+          <div class="split-bar__principal">$37.50 principal</div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="lbl">Interest paid</div>
+            <div class="big val--salmon">$52.50</div>
+            <div class="sub">58% of your payment</div>
+          </div>
+          <div class="stat-box">
+            <div class="lbl">Debt reduced</div>
+            <div class="big val--teal">$37.50</div>
+            <div class="sub">42% of your payment</div>
+          </div>
+        </div>
+
+        <div class="compound-box" role="note">
+          <strong>Compounding in action:</strong> Your new balance is $2,962.50.
+          Next month, interest is $2,962.50 &times; 1.75% = <strong>$51.84</strong>.
+          The interest charge decreases each month — but only because the
+          principal is slowly shrinking too.
+        </div>
+
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 2 — Balance payoff chart
+       ═══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="chart-panel">
+
+      <p class="chart-heading">Balance payoff — interest vs. principal each month</p>
+
+      <div class="scen-row" role="group" aria-label="Payment scenario selection">
+        <span class="scen-label">Scenario:</span>
+        <button class="scen-btn" id="btn-min" aria-pressed="true"  onclick="pick('min')">Minimum only</button>
+        <button class="scen-btn" id="btn-103" aria-pressed="false" onclick="pick(103)">$103 / month</button>
+        <button class="scen-btn" id="btn-200" aria-pressed="false" onclick="pick(200)">$200 / month</button>
+      </div>
+
+      <div class="legend" role="list">
+        <span role="listitem">
+          <span class="legend-swatch" style="background:var(--teal)" aria-hidden="true"></span>Principal (bottom)
+        </span>
+        <span role="listitem">
+          <span class="legend-swatch" style="background:var(--salmon)" aria-hidden="true"></span>Interest (top)
+        </span>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas
+          id="chart"
+          role="img"
+          aria-label="Stacked bar chart: principal in teal at the bottom, interest in salmon on top, one bar per month. Use the scenario buttons to switch between minimum payment, $103 per month, and $200 per month."
+        >Each bar is one month. Teal = principal, salmon = interest stacked on top.</canvas>
+      </div>
+
+      <div class="stats" role="region" aria-label="Payment scenario summary">
+        <div class="stat">
+          <div class="stat__label">Months to pay off</div>
+          <div class="stat__value" id="st-months" aria-live="polite">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Total paid</div>
+          <div class="stat__value" id="st-total" aria-live="polite">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Total interest</div>
+          <div class="stat__value stat__value--salmon" id="st-interest" aria-live="polite">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Saved vs. minimum</div>
+          <div class="stat__value stat__value--teal" id="st-savings" aria-live="polite">—</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /.uoi-embed -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const BALANCE   = 3000;
+  const APR       = 0.21;
+  const MIN_PCT   = 0.03;
+  const MIN_FLOOR = 25;
+
+  /* U of I brand colors for chart */
+  const C_TEAL   = '#0D605E';
+  const C_SALMON = '#EE5E5E';
+  const C_GRAY   = '#A5A8AA';
+  const C_DK     = '#5E6669';
+
+  function simulate(balance, apr, payType) {
+    const r = apr / 12;
+    let bal = balance;
+    const months = [];
+    while (bal > 0.005 && months.length < 720) {
+      const interest = parseFloat((bal * r).toFixed(2));
+      bal = parseFloat((bal + interest).toFixed(2));
+      let pmt = payType === 'min'
+        ? parseFloat(Math.min(bal, Math.max(parseFloat((bal * MIN_PCT).toFixed(2)), MIN_FLOOR)).toFixed(2))
+        : parseFloat(Math.min(bal, payType).toFixed(2));
+      const interestPaid  = parseFloat(Math.min(interest, pmt).toFixed(2));
+      const principalPaid = parseFloat(Math.max(0, pmt - interest).toFixed(2));
+      bal = parseFloat(Math.max(0, bal - pmt).toFixed(2));
+      months.push({ interest: interestPaid, principal: principalPaid, pmt });
+    }
+    const totalPaid = parseFloat(months.reduce((s, m) => s + m.pmt, 0).toFixed(2));
+    return { months, totalPaid, totalInterest: parseFloat((totalPaid - balance).toFixed(2)), n: months.length };
+  }
+
+  const results = {
+    min: simulate(BALANCE, APR, 'min'),
+    103: simulate(BALANCE, APR, 103),
+    200: simulate(BALANCE, APR, 200),
+  };
+
+  function fmtYM(n) {
+    const y = Math.floor(n / 12), m = n % 12;
+    if (!y) return m + ' mo';
+    if (!m) return y + ' yr';
+    return y + ' yr ' + m + ' mo';
+  }
+  function fmtUSD(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+  function tickLabel(val, idx) {
+    const mo = idx + 1;
+    if (mo === 1)      return 'Mo 1';
+    if (mo % 12 === 0) return 'Yr ' + (mo / 12);
+    return null;
+  }
+
+  const chart = new Chart(document.getElementById('chart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: results.min.months.map((_, i) => i),
+      datasets: [
+        { label: 'Principal', data: results.min.months.map(m => m.principal), backgroundColor: C_TEAL,   stack: 's', borderWidth: 0 },
+        { label: 'Interest',  data: results.min.months.map(m => m.interest),  backgroundColor: C_SALMON, stack: 's', borderWidth: 0 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#13294B',
+          titleColor: '#ffffff',
+          bodyColor: '#E8E9EA',
+          callbacks: {
+            title: items => 'Month ' + (items[0].dataIndex + 1),
+            label: item  => ' ' + item.dataset.label + ': ' + fmtUSD(item.raw),
+          },
+        },
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: { autoSkip: false, maxRotation: 0, font: { size: 11 }, color: C_DK, callback: tickLabel },
+          grid: { display: false },
+          border: { color: C_GRAY },
+        },
+        y: {
+          stacked: true,
+          ticks: { font: { size: 11 }, color: C_DK, callback: v => '$' + v },
+          grid: { color: '#e0e2e4' },
+          border: { color: C_GRAY },
+        },
+      },
+      barPercentage: 0.85,
+      categoryPercentage: 0.75,
+    },
+  });
+
+  function pick(scenario) {
+    const map = { min: 'btn-min', 103: 'btn-103', 200: 'btn-200' };
+    Object.entries(map).forEach(([key, id]) => {
+      document.getElementById(id).setAttribute('aria-pressed', key === String(scenario));
+    });
+    const res = results[scenario];
+    chart.data.labels = res.months.map((_, i) => i);
+    chart.data.datasets[0].data = res.months.map(m => m.principal);
+    chart.data.datasets[1].data = res.months.map(m => m.interest);
+    chart.update('none');
+    document.getElementById('st-months').textContent   = fmtYM(res.n);
+    document.getElementById('st-total').textContent    = fmtUSD(res.totalPaid);
+    document.getElementById('st-interest').textContent = fmtUSD(res.totalInterest);
+    document.getElementById('st-savings').textContent  = scenario === 'min' ? '—' : fmtUSD(results.min.totalInterest - res.totalInterest);
+  }
+
+  pick('min');
+</script>
+
+</body>
+</html>
