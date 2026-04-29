@@ -139,7 +139,7 @@
   <div class="scen-row" role="group" aria-labelledby="scen-lbl">
     <span id="scen-lbl" class="scen-label">Payment scenario:</span>
     <button class="scen-btn" id="btn-min" aria-pressed="true"  onclick="pick('min')">Minimum only</button>
-    <button class="scen-btn" id="btn-103" aria-pressed="false" onclick="pick(103)">$103 / month</button>
+    <button class="scen-btn" id="btn-113" aria-pressed="false" onclick="pick(113)">$113 / month</button>
     <button class="scen-btn" id="btn-200" aria-pressed="false" onclick="pick(200)">$200 / month</button>
   </div>
 
@@ -183,7 +183,7 @@
     return{months:ms,totalPaid:tp,totalInterest:parseFloat((tp-BALANCE).toFixed(2)),n:ms.length};
   }
 
-  var res={min:simulate('min'),103:simulate(103),200:simulate(200)};
+  var res={min:simulate('min'),113:simulate(113),200:simulate(200)};
 
   function fmtYM(n){var y=Math.floor(n/12),m=n%12;if(!y)return m+' mo';if(!m)return y+' yr';return y+' yr '+m+' mo';}
   function fmtD(n){return'$'+Math.round(n).toLocaleString('en-US');}
@@ -221,7 +221,7 @@
   function pick(s){
     var key=String(s);
     var r=res[key];
-    var map={min:'btn-min',103:'btn-103',200:'btn-200'};
+    var map={min:'btn-min',113:'btn-113',200:'btn-200'};
     Object.keys(map).forEach(function(k){
       document.getElementById(map[k]).setAttribute('aria-pressed',k===key?'true':'false');
     });
@@ -241,7 +241,7 @@
   pick('min');
 
   /* Arrow key nav */
-  var btns=['btn-min','btn-103','btn-200'],scns=['min',103,200];
+  var btns=['btn-min','btn-113','btn-200'],scns=['min',113,200];
   btns.forEach(function(id,idx){
     document.getElementById(id).addEventListener('keydown',function(e){
       var n=-1;
