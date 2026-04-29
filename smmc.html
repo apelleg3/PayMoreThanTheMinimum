@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pay More Than the Minimum — University of Illinois</title>
+  <title>Pay More Than the Minimum — University of Illinois System</title>
   <style>
     /*
      * Color palette: University of Illinois System brand
@@ -410,173 +410,266 @@
   <!-- ═══════════════════════════════════════════
        SECTION 2 — Balance payoff chart
        ═══════════════════════════════════════════ -->
-  <div class="section">
-    <div class="chart-panel">
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balance Payoff — Interest vs. Principal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      <p class="chart-heading">Balance payoff — interest vs. principal each month</p>
+    :root {
+      --navy:   #13294B;
+      --teal:   #0D605E;
+      --salmon: #EE5E5E;
+      --gray-lt:#E8E9EA;
+      --gray-md:#A5A8AA;
+      --gray-dk:#5E6669;
+      --border: #d0d3d6;
+      --white:  #ffffff;
+    }
 
-      <div class="scen-row" role="group" aria-label="Payment scenario selection">
-        <span class="scen-label">Scenario:</span>
-        <button class="scen-btn" id="btn-min" aria-pressed="true"  onclick="pick('min')">Minimum only</button>
-        <button class="scen-btn" id="btn-103" aria-pressed="false" onclick="pick(103)">$103 / month</button>
-        <button class="scen-btn" id="btn-200" aria-pressed="false" onclick="pick(200)">$200 / month</button>
-      </div>
+    html, body {
+      /* No fixed height — body grows to content so iframe can size to it */
+      height: auto;
+      overflow: hidden; /* suppress scrollbar inside iframe */
+    }
 
-      <div class="legend" role="list">
-        <span role="listitem">
-          <span class="legend-swatch" style="background:var(--teal)" aria-hidden="true"></span>Principal (bottom)
-        </span>
-        <span role="listitem">
-          <span class="legend-swatch" style="background:var(--salmon)" aria-hidden="true"></span>Interest (top)
-        </span>
-      </div>
+    body {
+      background: var(--white);
+      color: var(--navy);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-size: 13px;
+      padding: 12px 14px 16px;
+    }
 
-      <div class="chart-wrap">
-        <canvas
-          id="chart"
-          role="img"
-          aria-label="Stacked bar chart: principal in teal at the bottom, interest in salmon on top, one bar per month. Use the scenario buttons to switch between minimum payment, $103 per month, and $200 per month."
-        >Each bar is one month. Teal = principal, salmon = interest stacked on top.</canvas>
-      </div>
+    /* ── Scenario buttons ── */
+    .scen-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .scen-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-dk);
+    }
+    .scen-btn {
+      padding: 5px 14px;
+      font-size: 12.5px;
+      font-family: inherit;
+      border-radius: 3px;
+      cursor: pointer;
+      background: var(--white);
+      border: 1px solid var(--gray-md);
+      color: var(--gray-dk);
+      line-height: 1.4;
+    }
+    .scen-btn:hover { border-color: #0455A4; color: #0455A4; }
+    .scen-btn:focus-visible { outline: 3px solid #0455A4; outline-offset: 2px; }
+    .scen-btn[aria-pressed="true"] {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: var(--white);
+      font-weight: 700;
+    }
 
-      <div class="stats" role="region" aria-label="Payment scenario summary">
-        <div class="stat">
-          <div class="stat__label">Months to pay off</div>
-          <div class="stat__value" id="st-months" aria-live="polite">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat__label">Total paid</div>
-          <div class="stat__value" id="st-total" aria-live="polite">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat__label">Total interest</div>
-          <div class="stat__value stat__value--salmon" id="st-interest" aria-live="polite">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat__label">Saved vs. minimum</div>
-          <div class="stat__value stat__value--teal" id="st-savings" aria-live="polite">—</div>
-        </div>
-      </div>
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--gray-dk);
+      margin-bottom: 8px;
+    }
+    .legend-swatch {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border-radius: 2px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
 
-    </div>
+    /* ── Chart ── */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 260px;
+      margin-bottom: 12px;
+    }
+    canvas { display: block; }
+
+    /* ── Stats ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+    .stat {
+      background: var(--gray-lt);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 9px 11px;
+    }
+    .stat__label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--gray-dk);
+      margin-bottom: 3px;
+    }
+    .stat__value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .stat__value--red   { color: #9B2226; }
+    .stat__value--teal  { color: var(--teal); }
+
+    /* Screen reader only */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+  </style>
+
+<div id="payoff-announce" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+<div role="region" aria-labelledby="chart-heading">
+  <h2 id="chart-heading" class="sr-only">Balance payoff by month — interest vs. principal</h2>
+
+  <div class="scen-row" role="group" aria-labelledby="scen-lbl">
+    <span id="scen-lbl" class="scen-label">Payment scenario:</span>
+    <button class="scen-btn" id="btn-min" aria-pressed="true"  onclick="pick('min')">Minimum only</button>
+    <button class="scen-btn" id="btn-103" aria-pressed="false" onclick="pick(103)">$103 / month</button>
+    <button class="scen-btn" id="btn-200" aria-pressed="false" onclick="pick(200)">$200 / month</button>
   </div>
 
-</div><!-- /.uoi-embed -->
+  <div class="legend" role="list" aria-label="Chart legend">
+    <span role="listitem"><span class="legend-swatch" style="background:#0D605E" aria-hidden="true"></span>Principal (bottom)</span>
+    <span role="listitem"><span class="legend-swatch" style="background:#EE5E5E" aria-hidden="true"></span>Interest (top)</span>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="chart" role="img"
+      aria-label="Stacked bar chart: one bar per month, principal in teal at the bottom and interest in salmon on top. Scenario summary shown in the statistics below.">
+    </canvas>
+  </div>
+
+  <div class="stats" role="region" aria-label="Scenario summary">
+    <div class="stat"><div class="stat__label">Months to pay off</div><div class="stat__value" id="st-m">—</div></div>
+    <div class="stat"><div class="stat__label">Total paid</div><div class="stat__value" id="st-t">—</div></div>
+    <div class="stat"><div class="stat__label">Total interest</div><div class="stat__value stat__value--red" id="st-i">—</div></div>
+    <div class="stat"><div class="stat__label">Saved vs. minimum</div><div class="stat__value stat__value--teal" id="st-s">—</div></div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-  const BALANCE   = 3000;
-  const APR       = 0.21;
-  const MIN_PCT   = 0.03;
-  const MIN_FLOOR = 25;
+  var BALANCE=3000,APR=0.21,MIN_PCT=0.03,MIN_FLOOR=25;
 
-  /* U of I brand colors for chart */
-  const C_TEAL   = '#0D605E';
-  const C_SALMON = '#EE5E5E';
-  const C_GRAY   = '#A5A8AA';
-  const C_DK     = '#5E6669';
-
-  function simulate(balance, apr, payType) {
-    const r = apr / 12;
-    let bal = balance;
-    const months = [];
-    while (bal > 0.005 && months.length < 720) {
-      const interest = parseFloat((bal * r).toFixed(2));
-      bal = parseFloat((bal + interest).toFixed(2));
-      let pmt = payType === 'min'
-        ? parseFloat(Math.min(bal, Math.max(parseFloat((bal * MIN_PCT).toFixed(2)), MIN_FLOOR)).toFixed(2))
-        : parseFloat(Math.min(bal, payType).toFixed(2));
-      const interestPaid  = parseFloat(Math.min(interest, pmt).toFixed(2));
-      const principalPaid = parseFloat(Math.max(0, pmt - interest).toFixed(2));
-      bal = parseFloat(Math.max(0, bal - pmt).toFixed(2));
-      months.push({ interest: interestPaid, principal: principalPaid, pmt });
+  function simulate(pt){
+    var r=APR/12,bal=BALANCE,ms=[];
+    while(bal>0.005&&ms.length<720){
+      var intr=parseFloat((bal*r).toFixed(2));
+      bal=parseFloat((bal+intr).toFixed(2));
+      var pmt=pt==='min'
+        ?parseFloat(Math.min(bal,Math.max(parseFloat((bal*MIN_PCT).toFixed(2)),MIN_FLOOR)).toFixed(2))
+        :parseFloat(Math.min(bal,pt).toFixed(2));
+      var ip=parseFloat(Math.min(intr,pmt).toFixed(2));
+      var pp=parseFloat(Math.max(0,pmt-intr).toFixed(2));
+      bal=parseFloat(Math.max(0,bal-pmt).toFixed(2));
+      ms.push({i:ip,p:pp,pmt:pmt});
     }
-    const totalPaid = parseFloat(months.reduce((s, m) => s + m.pmt, 0).toFixed(2));
-    return { months, totalPaid, totalInterest: parseFloat((totalPaid - balance).toFixed(2)), n: months.length };
+    var tp=parseFloat(ms.reduce(function(s,m){return s+m.pmt;},0).toFixed(2));
+    return{months:ms,totalPaid:tp,totalInterest:parseFloat((tp-BALANCE).toFixed(2)),n:ms.length};
   }
 
-  const results = {
-    min: simulate(BALANCE, APR, 'min'),
-    103: simulate(BALANCE, APR, 103),
-    200: simulate(BALANCE, APR, 200),
-  };
+  var res={min:simulate('min'),103:simulate(103),200:simulate(200)};
 
-  function fmtYM(n) {
-    const y = Math.floor(n / 12), m = n % 12;
-    if (!y) return m + ' mo';
-    if (!m) return y + ' yr';
-    return y + ' yr ' + m + ' mo';
-  }
-  function fmtUSD(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function fmtYM(n){var y=Math.floor(n/12),m=n%12;if(!y)return m+' mo';if(!m)return y+' yr';return y+' yr '+m+' mo';}
+  function fmtD(n){return'$'+Math.round(n).toLocaleString('en-US');}
+  function tick(v,i){var m=i+1;if(m===1)return'Mo 1';if(m%12===0)return'Yr '+(m/12);return null;}
 
-  function tickLabel(val, idx) {
-    const mo = idx + 1;
-    if (mo === 1)      return 'Mo 1';
-    if (mo % 12 === 0) return 'Yr ' + (mo / 12);
-    return null;
-  }
-
-  const chart = new Chart(document.getElementById('chart').getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: results.min.months.map((_, i) => i),
-      datasets: [
-        { label: 'Principal', data: results.min.months.map(m => m.principal), backgroundColor: C_TEAL,   stack: 's', borderWidth: 0 },
-        { label: 'Interest',  data: results.min.months.map(m => m.interest),  backgroundColor: C_SALMON, stack: 's', borderWidth: 0 },
-      ],
+  var chart=new Chart(document.getElementById('chart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:res.min.months.map(function(_,i){return i;}),
+      datasets:[
+        {label:'Principal',data:res.min.months.map(function(m){return m.p;}),backgroundColor:'#0D605E',stack:'s',borderWidth:0},
+        {label:'Interest', data:res.min.months.map(function(m){return m.i;}),backgroundColor:'#EE5E5E',stack:'s',borderWidth:0}
+      ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#13294B',
-          titleColor: '#ffffff',
-          bodyColor: '#E8E9EA',
-          callbacks: {
-            title: items => 'Month ' + (items[0].dataIndex + 1),
-            label: item  => ' ' + item.dataset.label + ': ' + fmtUSD(item.raw),
-          },
-        },
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#13294B',titleColor:'#fff',bodyColor:'#E8E9EA',
+          callbacks:{
+            title:function(it){return'Month '+(it[0].dataIndex+1);},
+            label:function(it){return' '+it.dataset.label+': '+fmtD(it.raw);}
+          }
+        }
       },
-      scales: {
-        x: {
-          stacked: true,
-          ticks: { autoSkip: false, maxRotation: 0, font: { size: 11 }, color: C_DK, callback: tickLabel },
-          grid: { display: false },
-          border: { color: C_GRAY },
-        },
-        y: {
-          stacked: true,
-          ticks: { font: { size: 11 }, color: C_DK, callback: v => '$' + v },
-          grid: { color: '#e0e2e4' },
-          border: { color: C_GRAY },
-        },
+      scales:{
+        x:{stacked:true,ticks:{autoSkip:false,maxRotation:0,font:{size:11},color:'#5E6669',callback:tick},grid:{display:false},border:{color:'#A5A8AA'}},
+        y:{stacked:true,ticks:{font:{size:11},color:'#5E6669',callback:function(v){return'$'+v;}},grid:{color:'#d0d3d6'},border:{color:'#A5A8AA'}}
       },
-      barPercentage: 0.85,
-      categoryPercentage: 0.75,
-    },
+      barPercentage:0.85,categoryPercentage:0.75
+    }
   });
 
-  function pick(scenario) {
-    const map = { min: 'btn-min', 103: 'btn-103', 200: 'btn-200' };
-    Object.entries(map).forEach(([key, id]) => {
-      document.getElementById(id).setAttribute('aria-pressed', key === String(scenario));
+  function pick(s){
+    var key=String(s);
+    var r=res[key];
+    var map={min:'btn-min',103:'btn-103',200:'btn-200'};
+    Object.keys(map).forEach(function(k){
+      document.getElementById(map[k]).setAttribute('aria-pressed',k===key?'true':'false');
     });
-    const res = results[scenario];
-    chart.data.labels = res.months.map((_, i) => i);
-    chart.data.datasets[0].data = res.months.map(m => m.principal);
-    chart.data.datasets[1].data = res.months.map(m => m.interest);
+    chart.data.labels=r.months.map(function(_,i){return i;});
+    chart.data.datasets[0].data=r.months.map(function(m){return m.p;});
+    chart.data.datasets[1].data=r.months.map(function(m){return m.i;});
     chart.update('none');
-    document.getElementById('st-months').textContent   = fmtYM(res.n);
-    document.getElementById('st-total').textContent    = fmtUSD(res.totalPaid);
-    document.getElementById('st-interest').textContent = fmtUSD(res.totalInterest);
-    document.getElementById('st-savings').textContent  = scenario === 'min' ? '—' : fmtUSD(results.min.totalInterest - res.totalInterest);
+    document.getElementById('st-m').textContent=fmtYM(r.n);
+    document.getElementById('st-t').textContent=fmtD(r.totalPaid);
+    document.getElementById('st-i').textContent=fmtD(r.totalInterest);
+    var saved=s==='min'?'—':fmtD(res.min.totalInterest-r.totalInterest);
+    document.getElementById('st-s').textContent=saved;
+    var lbl=s==='min'?'Minimum only':'$'+s+' per month';
+    document.getElementById('payoff-announce').textContent=lbl+': pays off in '+fmtYM(r.n)+', total paid '+fmtD(r.totalPaid)+', total interest '+fmtD(r.totalInterest)+(s!=='min'?', saving '+saved+' vs minimum':'');
   }
 
   pick('min');
+
+  /* Arrow key nav */
+  var btns=['btn-min','btn-103','btn-200'],scns=['min',103,200];
+  btns.forEach(function(id,idx){
+    document.getElementById(id).addEventListener('keydown',function(e){
+      var n=-1;
+      if(e.key==='ArrowRight'||e.key==='ArrowDown')n=(idx+1)%btns.length;
+      if(e.key==='ArrowLeft' ||e.key==='ArrowUp')  n=(idx+btns.length-1)%btns.length;
+      if(n>=0){e.preventDefault();document.getElementById(btns[n]).focus();pick(scns[n]);}
+    });
+  });
+
+  /* Tell the parent page how tall to make the iframe */
+  function notifyHeight(){
+    var h=document.body.scrollHeight;
+    if(window.parent!==window){
+      try{window.parent.postMessage({payoffHeight:h},'*');}catch(e){}
+    }
+  }
+  notifyHeight();
+  window.addEventListener('resize',notifyHeight);
 </script>
 
 </body>
